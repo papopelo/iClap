@@ -1,17 +1,33 @@
 # 👏 iClapp
 
-Aplaude **dos veces** y tu Mac reproduce tu playlist de Spotify en shuffle.
-Corre en segundo plano y arranca solo al iniciar sesión.
+Aplaude **dos veces** y tu Mac reproduce tu música: **Spotify**, **Apple Music**
+o **YouTube Music**. Vive en la barra de menú y arranca solo al iniciar sesión.
 
 Funciona escuchando el micrófono y distinguiendo un aplauso (fuerte y **breve**)
 de la voz o la tos (más largas). No graba ni envía nada: todo es local.
 
+## Descargar la app (lo más fácil)
+
+1. Baja **iClapp** desde la página de
+   [Releases](https://github.com/papopelo/iClapp/releases/latest)
+   (archivo `iClapp-vX.Y.Z.zip`).
+2. Descomprime y arrastra **iClapp.app** a tu carpeta **Aplicaciones**.
+3. Como la app no está firmada, la primera vez ábrela con **clic derecho → Abrir**
+   (luego ya abre normal).
+4. Acepta el **permiso de micrófono** cuando macOS lo pida.
+5. En la barra de menú aparece 👏 → **Preferencias…** para elegir micrófono,
+   pegar tu URL y calibrar tus aplausos.
+
 ## Requisitos
 
 - **macOS**
-- **Python 3** (viene con macOS, o instálalo con `brew install python`)
-- **Spotify de escritorio** instalado (la app, no solo la web)
+- Una de estas apps para reproducir: **Spotify de escritorio**, **Apple Music**
+  (la app *Music*) o un navegador para **YouTube Music**
 - Un **micrófono** (el del MacBook sirve)
+
+> ¿Prefieres correrlo desde el código (modo barra de menú o servicio headless)?
+> Sigue las instrucciones de instalación más abajo. Para eso sí necesitas
+> **Python 3** (`brew install python`).
 
 ## Instalación rápida (un solo comando)
 
