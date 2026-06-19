@@ -26,6 +26,7 @@ DEFAULTS = {
     "max_clap_ms": 160,
     "shuffle": True,
     "input_device": None,   # nombre del micrófono, o None = dispositivo por defecto
+    "language": "auto",     # código de idioma (es/en/pt/fr/de/it) o "auto" = sistema
 }
 
 

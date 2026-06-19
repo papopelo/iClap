@@ -15,7 +15,9 @@ from pathlib import Path
 import rumps
 
 from . import config
+from . import i18n
 from .engine import ClapEngine
+from .i18n import t
 from .players import play
 
 _LOG = Path.home() / "Library" / "Logs" / "iClapp.log"
@@ -62,17 +64,26 @@ class IClapApp(rumps.App):
     def __init__(self):
         super().__init__("👏", quit_button=None)
         self.engine = None
-        self.status_item = rumps.MenuItem("Iniciando…")
-        self.toggle_item = rumps.MenuItem("Pausar", callback=self.toggle)
+        self.status_item = rumps.MenuItem(t("app.starting"))
+        self.toggle_item = rumps.MenuItem(t("app.pause"), callback=self.toggle)
+        self.prefs_item = rumps.MenuItem(t("app.preferences"), callback=self.open_prefs)
+        self.quit_item = rumps.MenuItem(t("app.quit"), callback=self.quit_app)
         self.menu = [
             self.status_item,
             None,
-            rumps.MenuItem("Preferencias…", callback=self.open_prefs),
+            self.prefs_item,
             self.toggle_item,
             None,
-            rumps.MenuItem("Salir iClapp", callback=self.quit_app),
+            self.quit_item,
         ]
         self.start_engine()
+
+    def _relabel(self):
+        """Reaplica los textos de menú fijos tras un cambio de idioma."""
+        self.prefs_item.title = t("app.preferences")
+        self.quit_item.title = t("app.quit")
+        running = bool(self.engine and self.engine.running)
+        self.toggle_item.title = t("app.pause") if running else t("app.resume")
 
     # --- Motor ---
     def start_engine(self):
@@ -85,11 +96,11 @@ class IClapApp(rumps.App):
         )
         try:
             self.engine.start()
-            mic = cfg.get("input_device") or "micrófono por defecto"
-            self.status_item.title = f"🎧 Escuchando · {mic}"
-            self.toggle_item.title = "Pausar"
+            mic = cfg.get("input_device") or t("app.default_mic")
+            self.status_item.title = t("app.listening", mic=mic)
+            self.toggle_item.title = t("app.pause")
         except Exception as e:  # noqa: BLE001
-            self.status_item.title = "⚠️ Error de micrófono (revisa permisos)"
+            self.status_item.title = t("app.mic_error")
 
     def stop_engine(self):
         if self.engine:
@@ -107,8 +118,8 @@ class IClapApp(rumps.App):
     def toggle(self, _):
         if self.engine and self.engine.running:
             self.stop_engine()
-            self.status_item.title = "⏸️ En pausa"
-            self.toggle_item.title = "Reanudar"
+            self.status_item.title = t("app.paused")
+            self.toggle_item.title = t("app.resume")
         else:
             self.start_engine()
 
@@ -116,7 +127,7 @@ class IClapApp(rumps.App):
         # Liberar el micrófono mientras Preferencias está abierta (para calibrar).
         was_running = self.engine and self.engine.running
         self.stop_engine()
-        self.status_item.title = "⚙️ Preferencias abiertas…"
+        self.status_item.title = t("app.prefs_open")
 
         def wait_and_reload():
             try:
@@ -125,11 +136,14 @@ class IClapApp(rumps.App):
                 _log(f"prefs cerrado (rc={proc.returncode})")
             except Exception as e:  # noqa: BLE001
                 _log(f"error al abrir prefs: {e}")
-            # Al cerrar la ventana, recargar config y volver a escuchar.
+            # Al cerrar la ventana, releer el idioma elegido y reetiquetar el menú.
+            i18n.refresh()
+            self._relabel()
+            # Recargar config y volver a escuchar.
             if was_running:
                 self.start_engine()
             else:
-                self.status_item.title = "⏸️ En pausa"
+                self.status_item.title = t("app.paused")
 
         threading.Thread(target=wait_and_reload, daemon=True).start()
 

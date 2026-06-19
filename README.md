@@ -6,6 +6,11 @@ o **YouTube Music**. Vive en la barra de menú y arranca solo al iniciar sesión
 Funciona escuchando el micrófono y distinguiendo un aplauso (fuerte y **breve**)
 de la voz o la tos (más largas). No graba ni envía nada: todo es local.
 
+**Multilingüe:** la interfaz está en **español, inglés, portugués, francés,
+alemán e italiano**. Por defecto arranca en el **idioma principal de tu Mac**
+(p. ej. un Mac en italiano abre iClapp en italiano); si ese idioma no está
+disponible, usa inglés. Puedes fijar otro idioma en **Preferencias… → 🌐 Idioma**.
+
 ## Descargar la app (lo más fácil)
 
 1. Baja **iClapp** desde la página de

@@ -12,19 +12,29 @@ import sys
 import time
 
 from . import config
+from . import i18n
 from .calibrate import run_cli as calibrate_cli
 from .engine import ClapEngine, list_input_devices
+from .i18n import LANGUAGES, t
 from .players import play
 
 
 def main():
-    parser = argparse.ArgumentParser(description="iClapp — música al aplaudir dos veces.")
+    # El idioma de la CLI puede venir por --lang; si no, sale de la config/sistema.
+    if "--lang" in sys.argv:
+        try:
+            i18n.set_language(sys.argv[sys.argv.index("--lang") + 1])
+        except (IndexError, ValueError):
+            pass
+
+    parser = argparse.ArgumentParser(description=t("cli.desc"))
     parser.add_argument("--calibrate", action="store_true",
-                        help="Mide tus aplausos y ajusta la sensibilidad.")
+                        help=t("cli.help_calibrate"))
     parser.add_argument("--list-devices", action="store_true",
-                        help="Lista los micrófonos de entrada disponibles.")
-    parser.add_argument("--url", help="Sobrescribe la URL a reproducir.")
-    parser.add_argument("--no-shuffle", action="store_true", help="Sin shuffle.")
+                        help=t("cli.help_list"))
+    parser.add_argument("--url", help=t("cli.help_url"))
+    parser.add_argument("--no-shuffle", action="store_true", help=t("cli.help_noshuffle"))
+    parser.add_argument("--lang", choices=list(LANGUAGES), help=t("cli.help_lang"))
     args = parser.parse_args()
 
     if args.list_devices:
@@ -41,7 +51,7 @@ def main():
     shuffle = cfg["shuffle"] and not args.no_shuffle
 
     def on_clap():
-        print("👏👏 doble aplauso")
+        print(t("cli.double_clap"))
         ok, msg = play(url, shuffle)
         print(("✅ " if ok else "⚠️  ") + msg, file=sys.stdout if ok else sys.stderr)
 
@@ -52,14 +62,14 @@ def main():
         input_device=cfg.get("input_device"),
     )
     engine.start()
-    mic = cfg.get("input_device") or "por defecto"
-    print(f"🎧 Escuchando (micro: {mic}, umbral={cfg['threshold']}, "
-          f"dur.máx≈{cfg['max_clap_ms']}ms). Aplaude DOS veces. Ctrl+C para salir.")
+    mic = cfg.get("input_device") or t("cli.default")
+    print(t("cli.listening", mic=mic, threshold=cfg["threshold"],
+            max_clap_ms=cfg["max_clap_ms"]))
     try:
         while True:
             time.sleep(0.2)
     except KeyboardInterrupt:
-        print("\n👋 Hasta luego.")
+        print("\n" + t("cli.bye"))
     finally:
         engine.stop()
 

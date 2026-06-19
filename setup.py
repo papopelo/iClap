@@ -20,8 +20,8 @@ OPTIONS = {
         "CFBundleName": "iClapp",
         "CFBundleDisplayName": "iClapp",
         "CFBundleIdentifier": "com.iclapp.app",
-        "CFBundleVersion": "1.0.0",
-        "CFBundleShortVersionString": "1.0.0",
+        "CFBundleVersion": "1.1.0",
+        "CFBundleShortVersionString": "1.1.0",
         # Sin icono en el Dock: vive en la barra de menú.
         "LSUIElement": True,
         # Texto del diálogo de permiso de micrófono.

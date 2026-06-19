@@ -13,8 +13,7 @@ from tkinter import ttk
 from . import config
 from .calibrate import measure, params_from
 from .engine import list_input_devices
-
-DEFAULT_LABEL = "Dispositivo por defecto"
+from .i18n import LANGUAGES, t
 
 
 class Prefs:
@@ -24,15 +23,18 @@ class Prefs:
         self.events = queue.Queue()
         self._calibrating = False
 
-        root.title("iClapp — Preferencias")
+        # Etiqueta del micrófono "por defecto" (sirve además de valor centinela).
+        self.DEFAULT_LABEL = t("prefs.default_device")
+
+        root.title(t("prefs.title"))
         root.resizable(False, False)
         frm = ttk.Frame(root, padding=16)
         frm.grid(sticky="nsew")
 
         # --- Micrófono ---
-        ttk.Label(frm, text="🎙️  Micrófono de entrada").grid(
+        ttk.Label(frm, text=t("prefs.mic_label")).grid(
             row=0, column=0, columnspan=2, sticky="w")
-        self.devices = [(DEFAULT_LABEL, None)] + list_input_devices()
+        self.devices = [(self.DEFAULT_LABEL, None)] + list_input_devices()
         names = [n for n, _ in self.devices]
         self.mic_var = tk.StringVar(value=self._current_mic_name())
         self.mic_menu = ttk.Combobox(frm, textvariable=self.mic_var, values=names,
@@ -40,50 +42,73 @@ class Prefs:
         self.mic_menu.grid(row=1, column=0, columnspan=2, sticky="we", pady=(2, 12))
 
         # --- URL ---
-        ttk.Label(frm, text="🔗  URL a reproducir (Spotify / Apple Music / "
-                            "YouTube Music)").grid(
+        ttk.Label(frm, text=t("prefs.url_label")).grid(
             row=2, column=0, columnspan=2, sticky="w")
         self.url_var = tk.StringVar(value=self.cfg.get("url", ""))
         ttk.Entry(frm, textvariable=self.url_var, width=42).grid(
             row=3, column=0, columnspan=2, sticky="we", pady=(2, 4))
-        ttk.Label(frm, text="Soporta canción, álbum o playlist (pega el enlace).",
+        ttk.Label(frm, text=t("prefs.url_hint"),
                   foreground="#888").grid(row=4, column=0, columnspan=2, sticky="w")
 
         self.shuffle_var = tk.BooleanVar(value=self.cfg.get("shuffle", True))
-        ttk.Checkbutton(frm, text="Reproducir en shuffle (Spotify / Apple Music)",
+        ttk.Checkbutton(frm, text=t("prefs.shuffle"),
                         variable=self.shuffle_var).grid(
             row=5, column=0, columnspan=2, sticky="w", pady=(8, 12))
 
+        # --- Idioma ---
+        ttk.Label(frm, text=t("prefs.language_label")).grid(
+            row=6, column=0, columnspan=2, sticky="w")
+        # Mapa nombre-mostrado -> código ("auto" para seguir al sistema).
+        self.lang_options = {t("prefs.language_auto"): "auto"}
+        for code, native in LANGUAGES.items():
+            self.lang_options[native] = code
+        self.lang_var = tk.StringVar(value=self._current_lang_name())
+        ttk.Combobox(frm, textvariable=self.lang_var,
+                     values=list(self.lang_options.keys()),
+                     state="readonly", width=38).grid(
+            row=7, column=0, columnspan=2, sticky="we", pady=(2, 4))
+        ttk.Label(frm, text=t("prefs.language_note"),
+                  foreground="#888").grid(row=8, column=0, columnspan=2, sticky="w")
+
         # --- Calibración ---
         ttk.Separator(frm, orient="horizontal").grid(
-            row=6, column=0, columnspan=2, sticky="we", pady=4)
+            row=9, column=0, columnspan=2, sticky="we", pady=(12, 4))
         cal = ttk.Frame(frm)
-        cal.grid(row=7, column=0, columnspan=2, sticky="we", pady=(8, 0))
-        self.cal_btn = ttk.Button(cal, text="🎚️  Calibrar aplausos",
+        cal.grid(row=10, column=0, columnspan=2, sticky="we", pady=(8, 0))
+        self.cal_btn = ttk.Button(cal, text=t("prefs.calibrate"),
                                   command=self.start_calibration)
         self.cal_btn.grid(row=0, column=0, sticky="w")
         self.cal_status = ttk.Label(
-            cal, text=f"Actual: umbral {self.cfg['threshold']}, "
-                      f"{self.cfg['max_clap_ms']} ms", foreground="#888")
+            cal, text=t("prefs.current", threshold=self.cfg["threshold"],
+                        max_clap_ms=self.cfg["max_clap_ms"]), foreground="#888")
         self.cal_status.grid(row=0, column=1, sticky="w", padx=10)
 
         # --- Guardar / Cerrar ---
         btns = ttk.Frame(frm)
-        btns.grid(row=8, column=0, columnspan=2, sticky="e", pady=(16, 0))
-        ttk.Button(btns, text="Cancelar", command=root.destroy).grid(row=0, column=0)
-        ttk.Button(btns, text="Guardar", command=self.save).grid(
+        btns.grid(row=11, column=0, columnspan=2, sticky="e", pady=(16, 0))
+        ttk.Button(btns, text=t("prefs.cancel"), command=root.destroy).grid(
+            row=0, column=0)
+        ttk.Button(btns, text=t("prefs.save"), command=self.save).grid(
             row=0, column=1, padx=(8, 0))
 
         root.after(100, self._drain_events)
 
+    def _current_lang_name(self):
+        """Nombre a mostrar del idioma guardado en config (o el 'Automático')."""
+        saved = self.cfg.get("language", "auto")
+        for name, code in self.lang_options.items():
+            if code == saved:
+                return name
+        return t("prefs.language_auto")
+
     def _current_mic_name(self):
         saved = self.cfg.get("input_device")
         if not saved:
-            return DEFAULT_LABEL
+            return self.DEFAULT_LABEL
         for n, _ in list_input_devices():
             if n == saved:
                 return saved
-        return DEFAULT_LABEL
+        return self.DEFAULT_LABEL
 
     # --- Calibración en hilo (la UI se actualiza vía cola) ---
     def start_calibration(self):
@@ -91,8 +116,8 @@ class Prefs:
             return
         self._calibrating = True
         self.cal_btn.config(state="disabled")
-        self.cal_status.config(text="Aplaude 5 veces, una a una…", foreground="#0a0")
-        device = None if self.mic_var.get() == DEFAULT_LABEL else self.mic_var.get()
+        self.cal_status.config(text=t("prefs.clap_prompt"), foreground="#0a0")
+        device = None if self.mic_var.get() == self.DEFAULT_LABEL else self.mic_var.get()
         threading.Thread(target=self._calibrate_worker, args=(device,),
                          daemon=True).start()
 
@@ -111,12 +136,12 @@ class Prefs:
                 kind, data = self.events.get_nowait()
                 if kind == "progress":
                     i, n = data
-                    self.cal_status.config(text=f"👏 {i}/{n} capturados…")
+                    self.cal_status.config(text=t("prefs.captured", i=i, n=n))
                 elif kind == "done":
                     self._finish_calibration(data)
                 elif kind == "error":
                     self.cal_status.config(
-                        text=f"Error: {data}", foreground="#c00")
+                        text=t("prefs.error", msg=data), foreground="#c00")
                     self.cal_btn.config(state="normal")
                     self._calibrating = False
         except queue.Empty:
@@ -127,24 +152,24 @@ class Prefs:
         self._calibrating = False
         self.cal_btn.config(state="normal")
         if params is None:
-            self.cal_status.config(
-                text="Pocos aplausos. Revisa el micrófono y reintenta.",
-                foreground="#c00")
+            self.cal_status.config(text=t("prefs.few_claps"), foreground="#c00")
             return
         threshold, max_clap_ms = params
         config.save({"threshold": threshold, "max_clap_ms": max_clap_ms})
         self.cfg["threshold"] = threshold
         self.cfg["max_clap_ms"] = max_clap_ms
         self.cal_status.config(
-            text=f"✅ Calibrado: umbral {threshold}, {max_clap_ms} ms",
+            text=t("prefs.calibrated", threshold=threshold, max_clap_ms=max_clap_ms),
             foreground="#0a0")
 
     def save(self):
-        mic = None if self.mic_var.get() == DEFAULT_LABEL else self.mic_var.get()
+        mic = None if self.mic_var.get() == self.DEFAULT_LABEL else self.mic_var.get()
+        language = self.lang_options.get(self.lang_var.get(), "auto")
         config.save({
             "url": self.url_var.get().strip(),
             "shuffle": self.shuffle_var.get(),
             "input_device": mic,
+            "language": language,
         })
         self.root.destroy()
 

@@ -13,6 +13,7 @@ import sounddevice as sd
 
 from . import config
 from .engine import BLOCK_MS, BLOCKSIZE, SAMPLERATE, _device_index
+from .i18n import t
 
 CAPTURE_FLOOR = 0.05   # entra a "racha" cualquier sonido por encima de esto
 CAPTURE_MIN = 0.12     # pico mínimo para contar como aplauso (no roce/ruido)
@@ -67,27 +68,26 @@ def params_from(claps):
 
 def run_cli(n=5):
     """Calibración interactiva por terminal; guarda en config."""
-    print(f"🎚️  Calibración: aplaude {n} veces, una a una, con ~1 s entre cada una.")
-    print("   (Ctrl+C para cancelar)\n")
+    print(t("cal.intro", n=n))
+    print(t("cal.cancel_hint") + "\n")
     cfg = config.load()
 
     def on_clap(i, total, peak, dur):
-        print(f"   👏 {i}/{total}  pico:{peak:5.3f}  dur:{dur:4.0f}ms")
+        print(t("cal.clap", i=i, total=total, peak=f"{peak:5.3f}", dur=f"{dur:4.0f}"))
 
     try:
         claps = measure(n=n, input_device=cfg.get("input_device"), on_clap=on_clap)
     except KeyboardInterrupt:
-        print("\n✋ Cancelada.")
+        print("\n" + t("cal.cancelled"))
         return
 
     params = params_from(claps)
     if params is None:
-        print(f"\n⚠️  Solo detecté {len(claps)} aplauso(s). Revisa el permiso de "
-              "micrófono y aplaude más fuerte/cerca; reintenta.")
+        print("\n" + t("cal.too_few", n=len(claps)))
         return
     threshold, max_clap_ms = params
     config.save({"threshold": threshold, "max_clap_ms": max_clap_ms})
-    print(f"\n✅ Calibrado: threshold={threshold}, max_clap_ms={max_clap_ms} (guardado).")
+    print("\n" + t("cal.saved", threshold=threshold, max_clap_ms=max_clap_ms))
 
 
 if __name__ == "__main__":

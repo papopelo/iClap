@@ -8,6 +8,8 @@
 import subprocess
 import sys
 
+from .i18n import t
+
 
 def classify(url):
     """Devuelve 'spotify', 'apple', 'youtube' o None según la URL."""
@@ -89,7 +91,7 @@ def play(url, shuffle=True):
     """
     service = classify(url)
     if service is None:
-        return False, "URL no reconocida (usa Spotify, Apple Music o YouTube Music)."
+        return False, t("players.unknown_url")
     try:
         if service == "spotify":
             _play_spotify(url, shuffle)
@@ -99,11 +101,11 @@ def play(url, shuffle=True):
             return True, "🍎 Apple Music" + (" (shuffle)" if shuffle else "")
         if service == "youtube":
             _play_youtube(url, shuffle)
-            return True, "▶️ YouTube Music (en el navegador)"
+            return True, t("players.youtube")
     except subprocess.CalledProcessError as e:
         detail = (e.stderr or "").strip() or str(e)
-        return False, f"Error al reproducir: {detail}"
-    return False, "Servicio no soportado."
+        return False, t("players.play_error", detail=detail)
+    return False, t("players.unsupported")
 
 
 if __name__ == "__main__":
