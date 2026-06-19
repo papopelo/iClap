@@ -19,8 +19,8 @@ OPTIONS = {
         "CFBundleName": "iClap",
         "CFBundleDisplayName": "iClap",
         "CFBundleIdentifier": "com.iclap.app",
-        "CFBundleVersion": "0.2.0",
-        "CFBundleShortVersionString": "0.2.0",
+        "CFBundleVersion": "1.0.0",
+        "CFBundleShortVersionString": "1.0.0",
         # Sin icono en el Dock: vive en la barra de menú.
         "LSUIElement": True,
         # Texto del diálogo de permiso de micrófono.
